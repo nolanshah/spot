@@ -8,8 +8,11 @@ build:
 release:
 	goreleaser release --snapshot --clean
 
-test-local:
-	go run main --input test/input --output test/output
+test-transform:
+	go run main --input test/input --output test/output --debug
+
+test-watch:
+	go run main --input test/input --output test/output --debug --watch --addr :8081
 
 clean:
 	rm -r test/output/*
