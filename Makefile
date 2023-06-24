@@ -18,3 +18,8 @@ clean:
 	rm -rf test/output/*
 	rm -rf build
 	rm -rf dist
+
+install-deps-mac:
+	brew install golang
+	brew install goreleaser/tap/goreleaser
+	brew instlal pandoc
