@@ -143,18 +143,10 @@ func convertFilesToHTML(inputDir, outputDir string) error {
 
 		fileName := strings.TrimSuffix(info.Name(), filepath.Ext(info.Name()))
 
-		// Construct the output file path
-		outputFile := filepath.Join(outputPath, fileName+".html")
-
-		// Run the pandoc command to convert the file to HTML
-		cmd := exec.Command("pandoc", filePath, "-o", outputFile, "--standalone", "--embed-resources")
-		err = cmd.Run()
+		err = convertFileToHTML(inputDir, relativePath, outputDir, fileName)
 		if err != nil {
-			log.Error().Err(err).Str("file", filePath).Msg("Failed to convert file to HTML")
 			return err
 		}
-
-		log.Info().Str("file", filePath).Msg("Converted file to HTML")
 
 		return nil
 	})
@@ -163,6 +155,55 @@ func convertFilesToHTML(inputDir, outputDir string) error {
 		log.Error().Err(err).Msg("Error walking through directory")
 		return err
 	}
+
+	return nil
+}
+
+func convertFileToHTML(inputDir string, inputFileRelPath string, outputDir string, outputFileName string) error {
+	outputFileName = outputFileName + ".html"
+
+	// Get absolute path of input directory
+	inputDirAbs, err := filepath.Abs(inputDir)
+	if err != nil {
+		log.Error().Err(err).Str("path", inputDir).Msg("Failed to get absolute path")
+		return err
+	}
+
+	// Get absolute path of output directory
+	outputDirAbs, err := filepath.Abs(outputDir)
+	if err != nil {
+		log.Error().Err(err).Str("path", outputDir).Msg("Failed to get absolute path")
+		return err
+	}
+
+	// Create the output directory structure
+	outputPath := filepath.Join(outputDir, filepath.Dir(inputFileRelPath))
+	if err := os.MkdirAll(outputPath, 0755); err != nil {
+		log.Error().Err(err).Str("file", inputFileRelPath).Msg("Failed to create output directory structure")
+		return err
+	}
+
+	assetsPath := filepath.Join(outputDirAbs, filepath.Dir("_assets"))
+	if err := os.MkdirAll(assetsPath, 0755); err != nil {
+		log.Error().Err(err).Str("file", inputFileRelPath).Msg("Failed to create output directory structure")
+		return err
+	}
+
+	// Construct the output file path
+	inputFileAbsPath := filepath.Join(inputDirAbs, inputFileRelPath)
+	outputFileRelPath := filepath.Join(filepath.Dir(inputFileRelPath), outputFileName)
+
+	// Run the pandoc command to convert the file to HTML
+	cmd := exec.Command("pandoc", inputFileAbsPath, "-o", outputFileName, "--standalone", "--extract-media=_assets")
+	cmd.Dir = filepath.Join(outputDir, filepath.Dir(inputFileRelPath))
+
+	err = cmd.Run()
+	if err != nil {
+		log.Error().Err(err).Str("input", inputFileAbsPath).Str("output", outputFileRelPath).Msg("Failed to convert file to HTML")
+		return err
+	}
+
+	log.Info().Str("input", inputFileAbsPath).Str("output", outputFileRelPath).Msg("Converted file to HTML")
 
 	return nil
 }
@@ -216,10 +257,10 @@ func main() {
 			inputDir := cCtx.Path("input")
 			outputDir := cCtx.Path("output")
 
-			wg := sync.WaitGroup{}
-			wg.Add(1) // Add the server to wait group
-
 			if cCtx.Bool("watch") {
+
+				wg := sync.WaitGroup{}
+				wg.Add(1) // Add the server to wait group
 
 				// Run the file watcher in a separate goroutine
 				go func() {
@@ -243,6 +284,8 @@ func main() {
 						log.Fatal().Err(err).Msg("Failed to serve output directory")
 					}
 				}
+
+				wg.Wait()
 			} else {
 				err := convertFilesToHTML(inputDir, outputDir)
 				if err != nil {
