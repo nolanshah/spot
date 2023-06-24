@@ -1,0 +1,19 @@
+name: build
+
+on:
+  pull_request:
+  push:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Setup Go environment
+      uses: actions/setup-go@v4.0.1
+    - name: Lint
+      run: make format
+    - name: Build
+      run: make build
