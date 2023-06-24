@@ -173,8 +173,8 @@ func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
 	app := &cli.App{
-		Name:  "easy-static",
-		Usage: "build static websites from a bunch of unstructured docs",
+		Name:  "bloop",
+		Usage: "build static websites from unstructured docs",
 		Flags: []cli.Flag{
 			&cli.PathFlag{
 				Name:     "input",
