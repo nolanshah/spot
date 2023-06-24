@@ -75,7 +75,7 @@ func watchInputDirectory(inputDir, outputDir string) error {
 	}
 
 	// Initial conversion of files
-	err = convertFilesToHTML(inputDir, outputDir)
+	err = processFiles(inputDir, outputDir)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to convert initial files to HTML")
 		return err
@@ -95,7 +95,7 @@ func watchInputDirectory(inputDir, outputDir string) error {
 			if event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create {
 				log.Info().Str("file", event.Name).Msg("File change detected")
 
-				err = convertFilesToHTML(inputDir, outputDir)
+				err = processFiles(inputDir, outputDir)
 				if err != nil {
 					log.Error().Err(err).Msg("Failed to convert files to HTML")
 					return err
@@ -115,7 +115,7 @@ func watchInputDirectory(inputDir, outputDir string) error {
 	}
 }
 
-func convertFilesToHTML(inputDir, outputDir string) error {
+func processFiles(inputDir, outputDir string) error {
 	err := filepath.Walk(inputDir, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
 			log.Error().Err(err).Str("file", filePath).Msg("Error accessing file")
@@ -197,9 +197,10 @@ func convertFileToHTML(inputDir string, inputFileRelPath string, outputDir strin
 	cmd := exec.Command("pandoc", inputFileAbsPath, "-o", outputFileName, "--standalone", "--extract-media=_assets")
 	cmd.Dir = filepath.Join(outputDir, filepath.Dir(inputFileRelPath))
 
-	err = cmd.Run()
+	out, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Error().Err(err).Str("input", inputFileAbsPath).Str("output", outputFileRelPath).Msg("Failed to convert file to HTML")
+		log.Error().Bytes("stdout", out).Msg("pandoc cli output")
 		return err
 	}
 
@@ -287,7 +288,7 @@ func main() {
 
 				wg.Wait()
 			} else {
-				err := convertFilesToHTML(inputDir, outputDir)
+				err := processFiles(inputDir, outputDir)
 				if err != nil {
 					if errors.Is(err, os.ErrPermission) {
 						log.Fatal().Err(err).Msg("Insufficient permissions")
