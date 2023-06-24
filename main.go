@@ -147,7 +147,7 @@ func convertFilesToHTML(inputDir, outputDir string) error {
 		outputFile := filepath.Join(outputPath, fileName+".html")
 
 		// Run the pandoc command to convert the file to HTML
-		cmd := exec.Command("pandoc", filePath, "-o", outputFile)
+		cmd := exec.Command("pandoc", filePath, "-o", outputFile, "--standalone", "--embed-resources")
 		err = cmd.Run()
 		if err != nil {
 			log.Error().Err(err).Str("file", filePath).Msg("Failed to convert file to HTML")
