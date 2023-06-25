@@ -141,18 +141,23 @@ func processFiles(inputDir, outputDir string) error {
 			return err
 		}
 
-		fileName := strings.TrimSuffix(info.Name(), filepath.Ext(info.Name()))
+		extension := filepath.Ext(info.Name())
+		fileName := strings.TrimSuffix(info.Name(), extension)
 
-		err = convertFileToHTML(inputDir, relativePath, outputDir, fileName)
-		if err != nil {
-			return err
+		if extension == ".docx" || extension == ".md" || extension == ".txt" || extension == ".ipynb" {
+			err = convertFileToHTML(inputDir, relativePath, outputDir, fileName)
+			if err != nil {
+				return err
+			}
+		} else {
+			log.Info().Str("extension", extension).Str("file", relativePath).Msg("Skipping file since extension is not supported")
 		}
 
 		return nil
 	})
 
 	if err != nil {
-		log.Error().Err(err).Msg("Error walking through directory")
+		log.Error().Err(err).Msg("Error walking through input directory")
 		return err
 	}
 
@@ -165,27 +170,27 @@ func convertFileToHTML(inputDir string, inputFileRelPath string, outputDir strin
 	// Get absolute path of input directory
 	inputDirAbs, err := filepath.Abs(inputDir)
 	if err != nil {
-		log.Error().Err(err).Str("path", inputDir).Msg("Failed to get absolute path")
+		log.Error().Err(err).Str("inputDirAbs", inputDir).Msg("Failed to get input absolute path")
 		return err
 	}
 
 	// Get absolute path of output directory
 	outputDirAbs, err := filepath.Abs(outputDir)
 	if err != nil {
-		log.Error().Err(err).Str("path", outputDir).Msg("Failed to get absolute path")
+		log.Error().Err(err).Str("outputDirAbs", outputDir).Msg("Failed to get output absolute path")
 		return err
 	}
 
 	// Create the output directory structure
 	outputPath := filepath.Join(outputDir, filepath.Dir(inputFileRelPath))
 	if err := os.MkdirAll(outputPath, 0755); err != nil {
-		log.Error().Err(err).Str("file", inputFileRelPath).Msg("Failed to create output directory structure")
+		log.Error().Err(err).Str("outputPath", outputPath).Msg("Failed to create output path")
 		return err
 	}
 
 	assetsPath := filepath.Join(outputDirAbs, filepath.Dir("_assets"))
 	if err := os.MkdirAll(assetsPath, 0755); err != nil {
-		log.Error().Err(err).Str("file", inputFileRelPath).Msg("Failed to create output directory structure")
+		log.Error().Err(err).Str("assetsPath", assetsPath).Msg("Failed to create assets path")
 		return err
 	}
 
@@ -196,11 +201,9 @@ func convertFileToHTML(inputDir string, inputFileRelPath string, outputDir strin
 	// Run the pandoc command to convert the file to HTML
 	cmd := exec.Command("pandoc", inputFileAbsPath, "-o", outputFileName, "--standalone", "--extract-media=_assets")
 	cmd.Dir = filepath.Join(outputDir, filepath.Dir(inputFileRelPath))
-
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Error().Err(err).Str("input", inputFileAbsPath).Str("output", outputFileRelPath).Msg("Failed to convert file to HTML")
-		log.Error().Bytes("stdout", out).Msg("pandoc cli output")
+		log.Error().Err(err).Str("input", inputFileAbsPath).Str("output", outputFileRelPath).Bytes("stdout/stderr", out).Msg("Failed to convert file to HTML with Pandoc")
 		return err
 	}
 
