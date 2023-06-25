@@ -58,7 +58,7 @@ func processFiles(inputDir, outputDir string) error {
 		} else if extension == ".lnk" {
 			link, err := converters.ExtractLinkFromShortcut(inputDir, relativePath)
 			if err != nil {
-				return err
+				return nil // TODO: don't ignore the error
 			}
 			log.Info().Str("file", relativePath).Str("link", link).Msg("Found a webloc link, not doing anything it with.")
 		} else {
