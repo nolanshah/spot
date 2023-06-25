@@ -1,7 +1,11 @@
 package main
 
 import (
+	"encoding/binary"
+	"encoding/xml"
 	"errors"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
@@ -149,6 +153,18 @@ func processFiles(inputDir, outputDir string) error {
 			if err != nil {
 				return err
 			}
+		} else if extension == ".webloc" {
+			link, err := extractLinkFromWebloc(inputDir, relativePath)
+			if err != nil {
+				return err
+			}
+			log.Info().Str("file", relativePath).Str("link", link).Msg("Found a webloc link, not doing anything it with.")
+		} else if extension == ".lnk" {
+			link, err := extractLinkFromWebloc(inputDir, relativePath)
+			if err != nil {
+				return err
+			}
+			log.Info().Str("file", relativePath).Str("link", link).Msg("Found a webloc link, not doing anything it with.")
 		} else {
 			log.Info().Str("extension", extension).Str("file", relativePath).Msg("Skipping file since extension is not supported")
 		}
@@ -162,6 +178,127 @@ func processFiles(inputDir, outputDir string) error {
 	}
 
 	return nil
+}
+
+type Webloc struct {
+	XMLName xml.Name `xml:"plist"`
+	Dict    struct {
+		Key    string `xml:"key"`
+		String string `xml:"string"`
+	} `xml:"dict"`
+}
+
+func extractLinkFromWebloc(inputDir string, inputFileRelPath string) (string, error) {
+	inputDirAbs, err := filepath.Abs(inputDir)
+	if err != nil {
+		log.Error().Err(err).Str("inputDirAbs", inputDir).Msg("Failed to get input absolute path")
+		return "", err
+	}
+	inputFileAbsPath := filepath.Join(inputDirAbs, inputFileRelPath)
+
+	// Read the contents of the webloc file
+	data, err := ioutil.ReadFile(inputFileAbsPath)
+	if err != nil {
+		return "", err
+	}
+
+	// Unmarshal the XML data into a Webloc struct
+	var webloc Webloc
+	err = xml.Unmarshal(data, &webloc)
+	if err != nil {
+		return "", err
+	}
+
+	// Extract and return the URL
+	return webloc.Dict.String, nil
+}
+
+type ShortcutHeader struct {
+	HeaderSize     uint32
+	LinkCLSID      [16]byte
+	LinkFlags      uint32
+	FileAttributes uint32
+	CreationTime   uint64
+	AccessTime     uint64
+	WriteTime      uint64
+	FileSize       uint32
+	IconIndex      uint32
+	ShowCommand    uint32
+	HotKey         uint16
+	Reserved1      uint16
+	Reserved2      uint32
+	Reserved3      uint32
+}
+
+func extractLinkFromShortcut(inputDir string, inputFileRelPath string) (string, error) {
+	inputDirAbs, err := filepath.Abs(inputDir)
+	if err != nil {
+		log.Error().Err(err).Str("inputDirAbs", inputDir).Msg("Failed to get input absolute path")
+		return "", err
+	}
+	inputFileAbsPath := filepath.Join(inputDirAbs, inputFileRelPath)
+
+	// Open the shortcut file
+	file, err := os.Open(inputFileAbsPath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	// Read the shortcut header
+	var header ShortcutHeader
+	err = binary.Read(file, binary.LittleEndian, &header)
+	if err != nil {
+		return "", err
+	}
+
+	// Check if the file is a valid Windows shortcut
+	if string(header.LinkCLSID[:]) != "{00021401-0000-0000-C000-000000000046}" {
+		return "", errors.New("not a valid Windows shortcut file")
+	}
+
+	// Read the remaining data to extract the URL
+	remainingDataSize := header.HeaderSize - 76
+	remainingData := make([]byte, remainingDataSize)
+	_, err = io.ReadFull(file, remainingData)
+	if err != nil {
+		return "", err
+	}
+
+	// Find the URL prefix
+	urlPrefix := []byte("URL")
+	index := bytesIndex(remainingData, urlPrefix)
+	if index == -1 {
+		return "", errors.New("no URL found in the shortcut file")
+	}
+
+	// Extract the URL
+	url := string(remainingData[index+4:])
+
+	return url, nil
+}
+
+func bytesIndex(data []byte, substr []byte) int {
+	n := len(data)
+	m := len(substr)
+	for i := 0; i < n-m+1; i++ {
+		if bytesEqual(data[i:i+m], substr) {
+			return i
+		}
+	}
+	return -1
+}
+
+func bytesEqual(a []byte, b []byte) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, v := range a {
+		if v != b[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func convertFileToHTML(inputDir string, inputFileRelPath string, outputDir string, outputFileName string) error {
