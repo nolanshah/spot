@@ -145,6 +145,13 @@ func main() {
 				Hidden: true,
 			},
 		},
+		Before: func(cCtx *cli.Context) error {
+			if cCtx.Bool("debug") {
+				zerolog.SetGlobalLevel(zerolog.DebugLevel)
+				log.Debug().Msg("Debug logging enabled.")
+			}
+			return nil
+		},
 	}
 
 	initCmd := &cli.Command{
@@ -191,11 +198,6 @@ func main() {
 			},
 		},
 		Action: func(cCtx *cli.Context) error {
-			if cCtx.Bool("debug") {
-				zerolog.SetGlobalLevel(zerolog.DebugLevel)
-				log.Debug().Msg("Debug logging enabled.")
-			}
-
 			configFile := cCtx.Path("config")
 			config, err := application.ParseConfig(configFile)
 			if err != nil {
