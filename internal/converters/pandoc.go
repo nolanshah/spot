@@ -43,7 +43,7 @@ func ConvertFileToHTML(inputDir string, inputFileRelPath string, outputDir strin
 	outputFileRelPath := filepath.Join(filepath.Dir(inputFileRelPath), outputFileName)
 
 	// Run the pandoc command to convert the file to HTML
-	cmd := exec.Command("pandoc", inputFileAbsPath, "-o", outputFileName, "--standalone", "--extract-media=_assets")
+	cmd := exec.Command("pandoc", inputFileAbsPath, "-o", outputFileName, "--extract-media=_assets")
 	cmd.Dir = filepath.Join(outputDir, filepath.Dir(inputFileRelPath))
 	out, err := cmd.CombinedOutput()
 	if err != nil {

@@ -70,6 +70,16 @@ func processFiles(config application.Config) error {
 			return err
 		}
 
+		absolutePath := filepath.Join(config.ContentPath, relativePath)
+
+		contentEntry := application.MatchContentEntry(config, absolutePath)
+		if contentEntry == nil {
+			log.Error().Err(err).Str("absolutePath", absolutePath).Msg("No matching content entry")
+			return err
+		}
+
+		templateAbsolutePath := filepath.Join(config.TemplatesPath, contentEntry.Template)
+
 		// Create the output directory structure
 		outputPath := filepath.Join(config.BuildPath, filepath.Dir(relativePath))
 		if err := os.MkdirAll(outputPath, 0755); err != nil {
@@ -81,19 +91,27 @@ func processFiles(config application.Config) error {
 		fileName := strings.TrimSuffix(info.Name(), extension)
 
 		if extension == ".docx" || extension == ".md" || extension == ".txt" || extension == ".ipynb" {
-			_, err = converters.ConvertFileToHTML(config.ContentPath, relativePath, config.BuildPath, fileName)
+			outputFilePath, err := converters.ConvertFileToHTML(config.ContentPath, relativePath, config.BuildPath, fileName)
 			if err != nil {
+				log.Error().Err(err).Str("input", absolutePath).Str("output", outputFilePath).Msg("Failed to convert file to HTML")
+				return err
+			}
+			err = application.ApplyTemplateToFile(outputFilePath, templateAbsolutePath)
+			if err != nil {
+				log.Error().Err(err).Str("template", templateAbsolutePath).Str("file", outputFilePath).Msg("Failed to apply template to file")
 				return err
 			}
 		} else if extension == ".webloc" {
 			link, err := converters.ExtractLinkFromWebloc(config.ContentPath, relativePath)
 			if err != nil {
+				log.Error().Err(err).Str("input", absolutePath).Msg("Failed to extract link from webloc")
 				return err
 			}
 			log.Info().Str("file", relativePath).Str("link", link).Msg("Found a webloc link, not doing anything it with.")
 		} else if extension == ".lnk" {
 			link, err := converters.ExtractLinkFromShortcut(config.ContentPath, relativePath)
 			if err != nil {
+				log.Error().Err(err).Str("input", absolutePath).Msg("Failed to extract link from lnk")
 				return nil // TODO: don't ignore the error
 			}
 			log.Info().Str("file", relativePath).Str("link", link).Msg("Found a webloc link, not doing anything it with.")

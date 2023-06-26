@@ -97,7 +97,7 @@ const contentTemplateMainHtml = `
 	<body>
 		<h1>Your First Bloop Template!</h1>
 		<main>
-			{{ .content }}
+			{{ .Contents }}
 		</main>
 	</body>
 </html>

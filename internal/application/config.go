@@ -63,10 +63,21 @@ func ParseConfig(configPath string) (Config, error) {
 	config.BuildPath = filepath.Join(basePath, config.BuildPath)
 
 	for i := range config.Content {
-		config.Content[i].InputPath = filepath.Join(basePath, config.Content[i].InputPath)
-		config.Content[i].OutputPath = filepath.Join(basePath, config.Content[i].OutputPath)
+		config.Content[i].InputPath = filepath.Join(config.ContentPath, config.Content[i].InputPath)
+		config.Content[i].OutputPath = filepath.Join(config.BuildPath, config.Content[i].OutputPath)
 	}
 
 	return config, nil
 
+}
+
+func MatchContentEntry(config Config, inputPath string) *ContentEntry {
+	// Iterate over each content entry
+	for _, entry := range config.Content {
+		// Check if the input path matches the content entry's input path
+		if entry.InputPath == inputPath {
+			return &entry
+		}
+	}
+	return nil // No match found
 }
