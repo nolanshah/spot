@@ -63,6 +63,9 @@ func processFiles(config application.Config) error {
 			return nil
 		}
 
+		extension := filepath.Ext(info.Name())
+		fileName := strings.TrimSuffix(info.Name(), extension)
+
 		// Get the relative path of the input file
 		relativePath, err := filepath.Rel(config.ContentPath, filePath)
 		if err != nil {
@@ -72,13 +75,23 @@ func processFiles(config application.Config) error {
 
 		absolutePath := filepath.Join(config.ContentPath, relativePath)
 
+		outputFileName := fileName + ".html"
+		outputFileRelPath := filepath.Join(filepath.Dir(relativePath), outputFileName)
+
 		contentEntry := application.MatchContentEntry(config, absolutePath)
 		if contentEntry == nil {
-			log.Error().Err(err).Str("absolutePath", absolutePath).Msg("No matching content entry")
-			return err
+			if config.DefaultTemplate != "" {
+				log.Warn().Str("absolutePath", absolutePath).Msg("No matching content entry, using default template to construct a content entry")
+				contentEntry = &application.ContentEntry{
+					InputPath:  absolutePath,
+					OutputPath: filepath.Join(config.BuildPath, outputFileRelPath),
+					Template:   config.DefaultTemplate,
+				}
+			} else {
+				log.Error().Err(err).Str("absolutePath", absolutePath).Msg("No matching content entry")
+				return err
+			}
 		}
-
-		templateAbsolutePath := filepath.Join(config.TemplatesPath, contentEntry.Template)
 
 		// Create the output directory structure
 		outputPath := filepath.Join(config.BuildPath, filepath.Dir(relativePath))
@@ -87,18 +100,15 @@ func processFiles(config application.Config) error {
 			return err
 		}
 
-		extension := filepath.Ext(info.Name())
-		fileName := strings.TrimSuffix(info.Name(), extension)
-
 		if extension == ".docx" || extension == ".md" || extension == ".txt" || extension == ".ipynb" {
 			outputFilePath, err := converters.ConvertFileToHTML(config.ContentPath, relativePath, config.BuildPath, fileName)
 			if err != nil {
 				log.Error().Err(err).Str("input", absolutePath).Str("output", outputFilePath).Msg("Failed to convert file to HTML")
 				return err
 			}
-			err = application.ApplyTemplateToFile(outputFilePath, templateAbsolutePath)
+			err = application.ApplyTemplateToFile(outputFilePath, contentEntry.Template)
 			if err != nil {
-				log.Error().Err(err).Str("template", templateAbsolutePath).Str("file", outputFilePath).Msg("Failed to apply template to file")
+				log.Error().Err(err).Str("template", contentEntry.Template).Str("file", outputFilePath).Msg("Failed to apply template to file")
 				return err
 			}
 		} else if extension == ".webloc" {

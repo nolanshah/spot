@@ -9,12 +9,13 @@ import (
 )
 
 type Config struct {
-	ConfigPath    string         `yaml:"-"`
-	ContentPath   string         `yaml:"content_path"`
-	StaticPath    string         `yaml:"static_path"`
-	TemplatesPath string         `yaml:"templates_path"`
-	BuildPath     string         `yaml:"build_path"`
-	Content       []ContentEntry `yaml:"content"`
+	ConfigPath      string         `yaml:"-"`
+	ContentPath     string         `yaml:"content_path"`
+	StaticPath      string         `yaml:"static_path"`
+	TemplatesPath   string         `yaml:"templates_path"`
+	BuildPath       string         `yaml:"build_path"`
+	DefaultTemplate string         `yaml:"default_template"`
+	Content         []ContentEntry `yaml:"content"`
 }
 
 type ContentEntry struct {
@@ -60,10 +61,14 @@ func ParseConfig(configPath string) (Config, error) {
 	config.StaticPath = filepath.Join(basePath, config.StaticPath)
 	config.TemplatesPath = filepath.Join(basePath, config.TemplatesPath)
 	config.BuildPath = filepath.Join(basePath, config.BuildPath)
+	if len(config.DefaultTemplate) > 0 {
+		config.DefaultTemplate = filepath.Join(config.TemplatesPath, config.DefaultTemplate)
+	}
 
 	for i := range config.Content {
 		config.Content[i].InputPath = filepath.Join(config.ContentPath, config.Content[i].InputPath)
 		config.Content[i].OutputPath = filepath.Join(config.BuildPath, config.Content[i].OutputPath)
+		config.Content[i].Template = filepath.Join(config.TemplatesPath, config.Content[i].Template)
 	}
 
 	return config, nil
