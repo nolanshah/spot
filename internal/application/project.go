@@ -47,6 +47,9 @@ func CreateProjectLayout(dir string) error {
 	if _, err := os.Create(indexFile); err != nil {
 		return err
 	}
+	if err := os.WriteFile(indexFile, []byte("# Hello world!\n\nWelcome to bloop!"), 0666); err != nil {
+		return err
+	}
 
 	// Create the templates directory
 	templatesDir := fmt.Sprintf("%s/templates", dir)
@@ -57,6 +60,9 @@ func CreateProjectLayout(dir string) error {
 	// Create the main.html file
 	mainFile := fmt.Sprintf("%s/templates/main.html", dir)
 	if _, err := os.Create(mainFile); err != nil {
+		return err
+	}
+	if err := os.WriteFile(mainFile, []byte("<html>\n<head>\n</head>\n<body>\n<main>\n{{ .content }}\n</main>\n</body>\n</html>\n"), 0666); err != nil {
 		return err
 	}
 
