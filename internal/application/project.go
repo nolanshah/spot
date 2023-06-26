@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"gopkg.in/yaml.v2"
 )
 
 func CreateProjectLayout(dir string) error {
@@ -19,8 +21,26 @@ func CreateProjectLayout(dir string) error {
 	}
 
 	// Create the config file
-	configFile := fmt.Sprintf("%s/config.yml", dir)
-	if _, err := os.Create(configFile); err != nil {
+	configFile := fmt.Sprintf("%s/config.yaml", dir)
+	config := Config{
+		ContentPath:   "content/",
+		StaticPath:    "static/",
+		TemplatesPath: "templates/",
+		BuildPath:     "dist/",
+		Content: []ContentEntry{
+			{
+				InputPath:  "index.md",
+				OutputPath: "index.html",
+				Converter:  nil,
+				Template:   "main.html",
+			},
+		},
+	}
+	configData, err := yaml.Marshal(config)
+	if err != nil {
+		return err
+	}
+	if err := os.WriteFile(configFile, configData, 0666); err != nil {
 		return err
 	}
 
@@ -47,7 +67,7 @@ func CreateProjectLayout(dir string) error {
 	if _, err := os.Create(indexFile); err != nil {
 		return err
 	}
-	if err := os.WriteFile(indexFile, []byte("# Hello world!\n\nWelcome to bloop!"), 0666); err != nil {
+	if err := os.WriteFile(indexFile, []byte(contentContentIndexMd), 0666); err != nil {
 		return err
 	}
 
@@ -62,9 +82,29 @@ func CreateProjectLayout(dir string) error {
 	if _, err := os.Create(mainFile); err != nil {
 		return err
 	}
-	if err := os.WriteFile(mainFile, []byte("<html>\n<head>\n</head>\n<body>\n<main>\n{{ .content }}\n</main>\n</body>\n</html>\n"), 0666); err != nil {
+	if err := os.WriteFile(mainFile, []byte(contentTemplateMainHtml), 0666); err != nil {
 		return err
 	}
 
 	return nil
 }
+
+const contentTemplateMainHtml = `
+<html>
+	<head>
+		<title>Your First Bloop Template!</title>
+	</head>
+	<body>
+		<h1>Your First Bloop Template!</h1>
+		<main>
+			{{ .content }}
+		</main>
+	</body>
+</html>
+`
+
+const contentContentIndexMd = `
+# Hello world!
+
+Welcome to bloop!
+`
