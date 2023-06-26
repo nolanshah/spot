@@ -75,22 +75,10 @@ func processFiles(config application.Config) error {
 
 		absolutePath := filepath.Join(config.ContentPath, relativePath)
 
-		outputFileName := fileName + ".html"
-		outputFileRelPath := filepath.Join(filepath.Dir(relativePath), outputFileName)
-
 		contentEntry := application.MatchContentEntry(config, absolutePath)
 		if contentEntry == nil {
-			if config.DefaultTemplate != "" {
-				log.Warn().Str("absolutePath", absolutePath).Msg("No matching content entry, using default template to construct a content entry")
-				contentEntry = &application.ContentEntry{
-					InputPath:  absolutePath,
-					OutputPath: filepath.Join(config.BuildPath, outputFileRelPath),
-					Template:   config.DefaultTemplate,
-				}
-			} else {
-				log.Error().Err(err).Str("absolutePath", absolutePath).Msg("No matching content entry")
-				return err
-			}
+			log.Error().Err(err).Str("absolutePath", absolutePath).Msg("No content entry")
+			return err
 		}
 
 		// Create the output directory structure

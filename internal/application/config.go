@@ -134,5 +134,25 @@ func ParseConfig(configPath string) (Config, error) {
 }
 
 func MatchContentEntry(config Config, inputPath string) *ContentEntry {
-	return config.contentTrie.search(inputPath)
+	entry := config.contentTrie.search(inputPath)
+	if entry == nil && config.DefaultTemplate != "" {
+		// Create a default ContentEntry
+		outputPath := filepath.Join(config.BuildPath, getOutputPath(inputPath))
+		entry = &ContentEntry{
+			InputPath:  inputPath,
+			OutputPath: outputPath,
+			Template:   config.DefaultTemplate,
+		}
+	} else if entry != nil && entry.OutputPath == "" {
+		// Fill the output path using default logic
+		entry.OutputPath = filepath.Join(config.BuildPath, getOutputPath(entry.InputPath))
+	}
+	return entry
+}
+
+func getOutputPath(inputPath string) string {
+	// Modify input path to have .html extension
+	ext := filepath.Ext(inputPath)
+	base := strings.TrimSuffix(inputPath, ext)
+	return base + ".html"
 }
