@@ -3,6 +3,7 @@ package application
 import (
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v2"
@@ -16,12 +17,66 @@ type Config struct {
 	BuildPath       string         `yaml:"build_path"`
 	DefaultTemplate string         `yaml:"default_template"`
 	Content         []ContentEntry `yaml:"content"`
+
+	contentTrie pathTrie `yaml:"-"`
 }
 
 type ContentEntry struct {
 	InputPath  string `yaml:"input_path"`
 	OutputPath string `yaml:"output_path"`
 	Template   string `yaml:"template"`
+}
+
+type trieNode struct {
+	isEnd    bool
+	children map[string]*trieNode
+	entry    *ContentEntry
+}
+
+type pathTrie struct {
+	root *trieNode
+}
+
+func newTrie() *pathTrie {
+	return &pathTrie{
+		root: &trieNode{
+			isEnd:    false,
+			children: make(map[string]*trieNode),
+			entry:    nil,
+		},
+	}
+}
+
+func (t *pathTrie) insert(path string, entry *ContentEntry) {
+	node := t.root
+	segments := strings.Split(path, "/")
+	for _, segment := range segments {
+		if node.children[segment] == nil {
+			node.children[segment] = &trieNode{
+				isEnd:    false,
+				children: make(map[string]*trieNode),
+				entry:    nil,
+			}
+		}
+		node = node.children[segment]
+	}
+	node.isEnd = true
+	node.entry = entry
+}
+
+func (t *pathTrie) search(path string) *ContentEntry {
+	node := t.root
+	segments := strings.Split(path, "/")
+	for _, segment := range segments {
+		if node.children[segment] == nil {
+			break
+		}
+		node = node.children[segment]
+	}
+	if node.isEnd {
+		return node.entry
+	}
+	return nil
 }
 
 func ParseConfig(configPath string) (Config, error) {
@@ -65,23 +120,19 @@ func ParseConfig(configPath string) (Config, error) {
 		config.DefaultTemplate = filepath.Join(config.TemplatesPath, config.DefaultTemplate)
 	}
 
+	// Build the path trie for content entries
+	contentTrie := newTrie()
 	for i := range config.Content {
 		config.Content[i].InputPath = filepath.Join(config.ContentPath, config.Content[i].InputPath)
 		config.Content[i].OutputPath = filepath.Join(config.BuildPath, config.Content[i].OutputPath)
 		config.Content[i].Template = filepath.Join(config.TemplatesPath, config.Content[i].Template)
+		contentTrie.insert(config.Content[i].InputPath, &config.Content[i])
 	}
+	config.contentTrie = *contentTrie
 
 	return config, nil
-
 }
 
 func MatchContentEntry(config Config, inputPath string) *ContentEntry {
-	// Iterate over each content entry
-	for _, entry := range config.Content {
-		// Check if the input path matches the content entry's input path
-		if entry.InputPath == inputPath {
-			return &entry
-		}
-	}
-	return nil // No match found
+	return config.contentTrie.search(inputPath)
 }
