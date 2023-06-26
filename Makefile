@@ -9,10 +9,10 @@ release:
 	goreleaser release --snapshot --clean
 
 test-transform:
-	go run main --input test/input --output test/output --debug
+	go run main build --input test/input --output test/output --debug
 
 test-watch:
-	go run main --input test/input --output test/output --debug --watch --addr :8081
+	go run main build --input test/input --output test/output --debug --watch --addr :8081
 
 clean:
 	rm -rf test/output/*

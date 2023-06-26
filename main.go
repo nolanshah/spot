@@ -85,6 +85,40 @@ func main() {
 		Name:  "bloop",
 		Usage: "build static websites from unstructured docs",
 		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:   "debug",
+				Value:  false,
+				Hidden: true,
+			},
+		},
+	}
+
+	initCmd := &cli.Command{
+		Name:  "init",
+		Usage: "Initialize project",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:  "dir",
+				Usage: "project directory",
+			},
+		},
+		Action: func(cCtx *cli.Context) error {
+			dir := cCtx.String("dir")
+			err := application.CreateProjectLayout(dir)
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to initialize project.")
+				return err
+			} else {
+				log.Info().Msg("Successfully initialized project.")
+				return nil
+			}
+		},
+	}
+
+	buildCommand := &cli.Command{
+		Name:  "build",
+		Usage: "Build project",
+		Flags: []cli.Flag{
 			&cli.PathFlag{
 				Name:     "input",
 				Usage:    "input directory",
@@ -109,11 +143,6 @@ func main() {
 				Usage:    "Address to serve, defaults to `:8080`",
 				Value:    ":8080",
 				Required: false,
-			},
-			&cli.BoolFlag{
-				Name:   "debug",
-				Value:  false,
-				Hidden: true,
 			},
 		},
 		Action: func(cCtx *cli.Context) error {
@@ -168,6 +197,8 @@ func main() {
 			return nil
 		},
 	}
+
+	app.Commands = []*cli.Command{initCmd, buildCommand}
 
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal().Err(err)
