@@ -120,19 +120,9 @@ func main() {
 		Usage: "Build project",
 		Flags: []cli.Flag{
 			&cli.PathFlag{
-				Name:     "input",
-				Usage:    "input directory",
-				Required: true,
-			},
-			&cli.PathFlag{
 				Name:     "config",
-				Usage:    "config directory",
+				Usage:    "config file path",
 				Required: false,
-			},
-			&cli.PathFlag{
-				Name:     "output",
-				Usage:    "output directory",
-				Required: true,
 			},
 			&cli.BoolFlag{
 				Name:  "watch",
@@ -151,9 +141,21 @@ func main() {
 				log.Debug().Msg("Debug logging enabled.")
 			}
 
-			inputDir := cCtx.Path("input")
-			outputDir := cCtx.Path("output")
+			configFile := cCtx.Path("config")
+			config, err := application.ParseConfig(configFile)
+			if err != nil {
+				log.Fatal().Err(err).Msg("Failed to get config")
+				return err
+			}
 
+			inputDir := config.ContentPath
+			outputDir := config.BuildPath
+
+			// copy static
+			// TODO: support watching on static
+			application.CopyDir(config.StaticPath, config.BuildPath)
+
+			// convert content and apply templates
 			if cCtx.Bool("watch") {
 
 				wg := sync.WaitGroup{}
