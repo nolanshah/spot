@@ -15,8 +15,44 @@ import (
 	"main/internal/converters"
 )
 
-func processFiles(inputDir, outputDir string) error {
-	err := filepath.Walk(inputDir, func(filePath string, info os.FileInfo, err error) error {
+func ResetDirectory(dirPath string) error {
+	// Check if the directory exists
+	_, err := os.Stat(dirPath)
+	if os.IsNotExist(err) {
+		// Directory doesn't exist, create it
+		err := os.Mkdir(dirPath, os.ModePerm)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to create directory")
+			return err
+		}
+	} else if err != nil {
+		log.Error().Err(err).Msg("Failed to check directory existence")
+		return err
+	} else {
+		// Directory exists, delete its contents
+		err := os.RemoveAll(dirPath)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to delete directory")
+			return err
+		}
+
+		// Recreate the directory
+		err = os.Mkdir(dirPath, os.ModePerm)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to create directory")
+			return err
+		}
+	}
+
+	return nil
+}
+
+func processFiles(config application.Config) error {
+	ResetDirectory(config.BuildPath)
+
+	application.CopyDir(config.StaticPath, config.BuildPath)
+
+	err := filepath.Walk(config.ContentPath, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
 			log.Error().Err(err).Str("file", filePath).Msg("Error accessing file")
 			return err
@@ -28,14 +64,14 @@ func processFiles(inputDir, outputDir string) error {
 		}
 
 		// Get the relative path of the input file
-		relativePath, err := filepath.Rel(inputDir, filePath)
+		relativePath, err := filepath.Rel(config.ContentPath, filePath)
 		if err != nil {
 			log.Error().Err(err).Str("file", filePath).Msg("Failed to get relative path")
 			return err
 		}
 
 		// Create the output directory structure
-		outputPath := filepath.Join(outputDir, filepath.Dir(relativePath))
+		outputPath := filepath.Join(config.BuildPath, filepath.Dir(relativePath))
 		if err := os.MkdirAll(outputPath, 0755); err != nil {
 			log.Error().Err(err).Str("file", filePath).Msg("Failed to create output directory structure")
 			return err
@@ -45,18 +81,18 @@ func processFiles(inputDir, outputDir string) error {
 		fileName := strings.TrimSuffix(info.Name(), extension)
 
 		if extension == ".docx" || extension == ".md" || extension == ".txt" || extension == ".ipynb" {
-			err = converters.ConvertFileToHTML(inputDir, relativePath, outputDir, fileName)
+			err = converters.ConvertFileToHTML(config.ContentPath, relativePath, config.BuildPath, fileName)
 			if err != nil {
 				return err
 			}
 		} else if extension == ".webloc" {
-			link, err := converters.ExtractLinkFromWebloc(inputDir, relativePath)
+			link, err := converters.ExtractLinkFromWebloc(config.ContentPath, relativePath)
 			if err != nil {
 				return err
 			}
 			log.Info().Str("file", relativePath).Str("link", link).Msg("Found a webloc link, not doing anything it with.")
 		} else if extension == ".lnk" {
-			link, err := converters.ExtractLinkFromShortcut(inputDir, relativePath)
+			link, err := converters.ExtractLinkFromShortcut(config.ContentPath, relativePath)
 			if err != nil {
 				return nil // TODO: don't ignore the error
 			}
@@ -149,14 +185,6 @@ func main() {
 				return err
 			}
 
-			inputDir := config.ContentPath
-			outputDir := config.BuildPath
-
-			// copy static
-			// TODO: support watching on static
-			application.CopyDir(config.StaticPath, config.BuildPath)
-
-			// convert content and apply templates
 			if cCtx.Bool("watch") {
 
 				wg := sync.WaitGroup{}
@@ -164,7 +192,7 @@ func main() {
 
 				// Run the file watcher in a separate goroutine
 				go func() {
-					err := application.WatchInputDirectory(inputDir, outputDir, processFiles)
+					err := application.WatchInputDirectory(config, processFiles)
 					if err != nil {
 						if errors.Is(err, os.ErrPermission) {
 							log.Fatal().Err(err).Msg("Insufficient permissions")
@@ -176,7 +204,7 @@ func main() {
 
 				addr := cCtx.String("addr")
 
-				err := application.ServeOutputDirectory(outputDir, addr, &wg)
+				err := application.ServeOutputDirectory(config.BuildPath, addr, &wg)
 				if err != nil {
 					if errors.Is(err, os.ErrPermission) {
 						log.Fatal().Err(err).Msg("Insufficient permissions")
@@ -187,7 +215,7 @@ func main() {
 
 				wg.Wait()
 			} else {
-				err := processFiles(inputDir, outputDir)
+				err := processFiles(config)
 				if err != nil {
 					if errors.Is(err, os.ErrPermission) {
 						log.Fatal().Err(err).Msg("Insufficient permissions")

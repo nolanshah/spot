@@ -10,7 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func WatchInputDirectory(inputDir string, outputDir string, processFiles func(inputDir string, outputDir string) error) error {
+func WatchInputDirectory(config Config, processFiles func(config Config) error) error {
 	// Set up signal handling to stop the watcher gracefully
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
@@ -24,14 +24,14 @@ func WatchInputDirectory(inputDir string, outputDir string, processFiles func(in
 	defer watcher.Close()
 
 	// Add the input directory to the watcher
-	err = watcher.Add(inputDir)
+	err = watcher.Add(config.ContentPath)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to watch input directory")
 		return err
 	}
 
 	// Initial conversion of files
-	err = processFiles(inputDir, outputDir)
+	err = processFiles(config)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to convert initial files to HTML")
 		return err
@@ -51,7 +51,7 @@ func WatchInputDirectory(inputDir string, outputDir string, processFiles func(in
 			if event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create {
 				log.Info().Str("file", event.Name).Msg("File change detected")
 
-				err = processFiles(inputDir, outputDir)
+				err = processFiles(config)
 				if err != nil {
 					log.Error().Err(err).Msg("Failed to convert files to HTML")
 					return err
