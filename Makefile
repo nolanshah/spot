@@ -1,8 +1,9 @@
+.PHONY: format build release test-transform test-watch clean install-deps-mac
 
 format:
 	gofmt -s -w ./
 
-build: 
+build:
 	go build -o build/bloop
 
 release:
