@@ -1,29 +1,30 @@
 package application
 
 import (
-	"fmt"
 	"html/template"
 	"io/ioutil"
 	"os"
+
+	"github.com/rs/zerolog/log"
 )
 
 func ApplyTemplateToFile(contentHtmlPath string, templatePath string) error {
 	// Read the contents of the file
 	contents, err := ioutil.ReadFile(contentHtmlPath)
 	if err != nil {
-		return fmt.Errorf("failed to read file: %v", err)
+		log.Error().Err(err).Msg("Failed to read file")
 	}
 
 	// Parse the template file
 	tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
-		return fmt.Errorf("failed to parse template: %v", err)
+		log.Error().Err(err).Msg("Failed to parse template")
 	}
 
 	// Create a buffer to hold the rendered output
 	output := &os.File{}
 	if output, err = os.Create(contentHtmlPath); err != nil {
-		return fmt.Errorf("failed to create output file: %v", err)
+		log.Error().Err(err).Msg("Failed to create output file")
 	}
 	defer output.Close()
 
@@ -35,8 +36,11 @@ func ApplyTemplateToFile(contentHtmlPath string, templatePath string) error {
 
 	// Apply the template to the contents and write the output to the file
 	if err := tmpl.Execute(output, data); err != nil {
-		return fmt.Errorf("failed to apply template: %v", err)
+		log.Error().Err(err).Msg("Failed to apply template")
+		return err
 	}
+
+	log.Info().Str("template", templatePath).Str("file", contentHtmlPath).Msg("Successfully applied template to file")
 
 	return nil
 }
