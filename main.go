@@ -81,7 +81,7 @@ func processFiles(config application.Config) error {
 		fileName := strings.TrimSuffix(info.Name(), extension)
 
 		if extension == ".docx" || extension == ".md" || extension == ".txt" || extension == ".ipynb" {
-			err = converters.ConvertFileToHTML(config.ContentPath, relativePath, config.BuildPath, fileName)
+			_, err = converters.ConvertFileToHTML(config.ContentPath, relativePath, config.BuildPath, fileName)
 			if err != nil {
 				return err
 			}
