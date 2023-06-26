@@ -31,7 +31,6 @@ func CreateProjectLayout(dir string) error {
 			{
 				InputPath:  "index.md",
 				OutputPath: "index.html",
-				Converter:  nil,
 				Template:   "main.html",
 			},
 		},

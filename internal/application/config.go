@@ -18,10 +18,9 @@ type Config struct {
 }
 
 type ContentEntry struct {
-	InputPath  string      `yaml:"input_path"`
-	OutputPath string      `yaml:"output_path"`
-	Converter  interface{} `yaml:"converter"`
-	Template   string      `yaml:"template"`
+	InputPath  string `yaml:"input_path"`
+	OutputPath string `yaml:"output_path"`
+	Template   string `yaml:"template"`
 }
 
 func ParseConfig(configPath string) (Config, error) {
