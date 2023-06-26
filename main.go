@@ -122,6 +122,7 @@ func main() {
 			&cli.PathFlag{
 				Name:     "config",
 				Usage:    "config file path",
+				Value:    "config.yaml",
 				Required: false,
 			},
 			&cli.BoolFlag{
