@@ -93,6 +93,12 @@ func ProcessFiles(config Config) error {
 				log.Error().Err(err).Str("template", contentEntry.Template).Str("file", outputFilePath).Msg("Failed to apply template to file")
 				return err
 			}
+		} else if extension == ".html" {
+			err = ApplyTemplateToFile(absolutePath, contentEntry.Template)
+			if err != nil {
+				log.Error().Err(err).Str("template", contentEntry.Template).Str("file", absolutePath).Msg("Failed to apply template to file")
+				return err
+			}
 		} else if extension == ".webloc" {
 			link, err := converters.ExtractLinkFromWebloc(config.ContentPath, relativePath)
 			if err != nil {
