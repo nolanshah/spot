@@ -41,10 +41,21 @@ func ResetDirectory(dirPath string) error {
 	return nil
 }
 
+type page struct {
+	url            string
+	relativePath   string
+	absContentPath string
+	absOutputPath  string
+	contentEntry   ContentEntry
+	fileNameNoExt  string
+}
+
 func ProcessFiles(config Config) error {
 	ResetDirectory(config.BuildPath)
 
 	CopyDir(config.StaticPath, config.BuildPath)
+
+	pages := make([]page, 0)
 
 	err := filepath.Walk(config.ContentPath, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -88,17 +99,26 @@ func ProcessFiles(config Config) error {
 				log.Error().Err(err).Str("input", absolutePath).Str("output", outputFilePath).Msg("Failed to convert file to HTML")
 				return err
 			}
-			err = ApplyTemplateToFile(outputFilePath, contentEntry.Template)
-			if err != nil {
-				log.Error().Err(err).Str("template", contentEntry.Template).Str("file", outputFilePath).Msg("Failed to apply template to file")
-				return err
-			}
+
+			pages = append(pages, page{
+				url:            relativePath, // TODO: drop index.html from url
+				relativePath:   relativePath,
+				absContentPath: contentEntry.InputPath,
+				absOutputPath:  contentEntry.OutputPath,
+				contentEntry:   *contentEntry,
+				fileNameNoExt:  fileName,
+			})
 		} else if extension == ".html" {
-			err = ApplyTemplateToFile(absolutePath, contentEntry.Template)
-			if err != nil {
-				log.Error().Err(err).Str("template", contentEntry.Template).Str("file", absolutePath).Msg("Failed to apply template to file")
-				return err
-			}
+			CopyFile(absolutePath, outputPath)
+
+			pages = append(pages, page{
+				url:            relativePath, // TODO: drop index.html from url
+				relativePath:   relativePath,
+				absContentPath: contentEntry.InputPath,
+				absOutputPath:  contentEntry.OutputPath,
+				contentEntry:   *contentEntry,
+				fileNameNoExt:  fileName,
+			})
 		} else if extension == ".webloc" {
 			link, err := converters.ExtractLinkFromWebloc(config.ContentPath, relativePath)
 			if err != nil {
@@ -119,6 +139,19 @@ func ProcessFiles(config Config) error {
 
 		return nil
 	})
+
+	pages_urls := make([]string, 0, len(pages))
+	for _, p := range pages {
+		pages_urls = append(pages_urls, p.url)
+	}
+
+	for _, page := range pages {
+		err = ApplyTemplateToFile(page.absOutputPath, page.contentEntry.Template, &pages_urls)
+		if err != nil {
+			log.Error().Err(err).Str("template", page.contentEntry.Template).Str("file", page.absOutputPath).Msg("Failed to apply template to file")
+			return err
+		}
+	}
 
 	if err != nil {
 		log.Error().Err(err).Msg("Error walking through input directory")

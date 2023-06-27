@@ -8,7 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func ApplyTemplateToFile(contentHtmlPath string, templatePath string) error {
+func ApplyTemplateToFile(contentHtmlPath string, templatePath string, pages *[]string) error {
 	// Read the contents of the file
 	contents, err := ioutil.ReadFile(contentHtmlPath)
 	if err != nil {
