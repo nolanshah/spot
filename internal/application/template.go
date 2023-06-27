@@ -30,8 +30,10 @@ func ApplyTemplateToFile(contentHtmlPath string, templatePath string, pages *[]s
 
 	data := struct {
 		Contents template.HTML
+		Pages    []string
 	}{
 		Contents: template.HTML(contents),
+		Pages:    *pages,
 	}
 
 	// Apply the template to the contents and write the output to the file
