@@ -91,10 +91,10 @@ func CreateProjectLayout(dir string) error {
 const contentTemplateMainHtml = `
 <html>
 	<head>
-		<title>Your First Bloop Template!</title>
+		<title>Your First Spot Template!</title>
 	</head>
 	<body>
-		<h1>Your First Bloop Template!</h1>
+		<h1>Your First Spot Template!</h1>
 		<main>
 			{{ .Contents }}
 		</main>
@@ -105,5 +105,5 @@ const contentTemplateMainHtml = `
 const contentContentIndexMd = `
 # Hello world!
 
-Welcome to bloop!
+Welcome to spot!
 `

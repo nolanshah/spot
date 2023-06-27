@@ -4,7 +4,7 @@ format:
 	gofmt -s -w ./
 
 build:
-	go build -o build/bloop
+	go build -o build/spot
 
 release:
 	goreleaser release --snapshot --clean

@@ -1,4 +1,4 @@
-project_name: bloop
+project_name: spot
 before:
   hooks:
     # You may remove this if you don't use go modules.
