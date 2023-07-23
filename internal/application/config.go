@@ -143,22 +143,30 @@ func MatchContentEntry(config Config, inputPath string) *ContentEntry {
 	entry := config.contentTrie.search(inputPath)
 	if entry == nil && config.DefaultTemplate != "" {
 		// Create a default ContentEntry
-		outputPath := filepath.Join(config.BuildPath, getOutputPath(inputPath))
+		outputPath := filepath.Join(config.BuildPath, getOutputPath(inputPath, config.ContentPath))
 		entry = &ContentEntry{
 			InputPath:  inputPath,
 			OutputPath: outputPath,
 			Template:   config.DefaultTemplate,
 		}
+		log.Trace().Any("generatedEntry", entry).Str("outputPath", outputPath).Str("buildPath", config.BuildPath).Msg("Generated default content entry.")
 	} else if entry != nil && entry.OutputPath == "" {
 		// Fill the output path using default logic
-		entry.OutputPath = filepath.Join(config.BuildPath, getOutputPath(entry.InputPath))
+		entry.OutputPath = filepath.Join(config.BuildPath, getOutputPath(entry.InputPath, config.ContentPath))
 	}
 	return entry
 }
 
-func getOutputPath(inputPath string) string {
+func getOutputPath(inputPath string, baseInputPath string) string {
+	// Get the relative path of the input file
+	relInputPath, err := filepath.Rel(baseInputPath, inputPath)
+	if err != nil {
+		log.Error().Err(err).Str("file", inputPath).Msg("Failed to get relative path.")
+		panic(err) // if we reach this without erroring, we screwed up somewhere upstream
+	}
+
 	// Modify input path to have .html extension
-	ext := filepath.Ext(inputPath)
-	base := strings.TrimSuffix(inputPath, ext)
+	ext := filepath.Ext(relInputPath)
+	base := strings.TrimSuffix(relInputPath, ext)
 	return base + ".html"
 }
