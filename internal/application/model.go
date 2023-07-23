@@ -13,7 +13,7 @@ type TPage struct {
 	UrlPath         string
 	Title           string
 	Description     string
-	Date            time.Time
+	CreatedAt       time.Time
 	Tags            []string
 	Metadata        map[string]string
 }

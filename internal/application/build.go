@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/rs/zerolog/log"
 )
@@ -182,9 +181,9 @@ func ProcessFiles(config Config) error {
 			UrlPath:         "/" + p.url,
 			Title:           foundTitle,
 			Description:     foundDesc,
-			Date:            time.Now(),
-			Tags:            []string{},
-			Metadata:        map[string]string{},
+			CreatedAt:       p.contentEntry.CreatedAt,
+			Tags:            p.contentEntry.Tags,
+			Metadata:        p.contentEntry.Metadata,
 		})
 	}
 

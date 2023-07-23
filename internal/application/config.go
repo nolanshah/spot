@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v2"
@@ -22,11 +23,14 @@ type Config struct {
 }
 
 type ContentEntry struct {
-	InputPath   string `yaml:"input_path"`
-	OutputPath  string `yaml:"output_path"`
-	Template    string `yaml:"template"`
-	Title       string `yaml:"title"`
-	Description string `yaml:"description"`
+	InputPath   string            `yaml:"input_path"`
+	OutputPath  string            `yaml:"output_path"`
+	Template    string            `yaml:"template"`
+	Title       string            `yaml:"title"`
+	Description string            `yaml:"description"`
+	CreatedAt   time.Time         `yaml:"created_at"`
+	Tags        []string          `yaml:"tags"`
+	Metadata    map[string]string `yaml:"metadata"`
 }
 
 type trieNode struct {
