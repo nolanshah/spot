@@ -51,7 +51,7 @@ func ConvertFileToHTML(inputDir string, inputFileRelPath string, outputDir strin
 		return "", err
 	}
 
-	log.Info().Str("input", inputFileAbsPath).Str("output", outputFileRelPath).Msg("Converted file to HTML")
+	log.Trace().Str("input", inputFileAbsPath).Str("output", outputFileRelPath).Msg("Converted file to HTML")
 
 	return filepath.Join(outputDir, outputFileRelPath), nil
 }

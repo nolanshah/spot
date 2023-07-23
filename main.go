@@ -14,7 +14,7 @@ import (
 
 func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
 	app := &cli.App{
@@ -29,7 +29,7 @@ func main() {
 		},
 		Before: func(cCtx *cli.Context) error {
 			if cCtx.Bool("debug") {
-				zerolog.SetGlobalLevel(zerolog.DebugLevel)
+				zerolog.SetGlobalLevel(zerolog.TraceLevel)
 				log.Debug().Msg("Debug logging enabled.")
 			}
 			return nil

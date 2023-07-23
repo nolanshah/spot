@@ -10,7 +10,7 @@ import (
 )
 
 func hasPrefix(prefix string, s string) bool {
-	log.Logger.Info().Str("prefix", prefix).Str("string", s).Msg("Called hasPrefix")
+	log.Logger.Trace().Str("prefix", prefix).Str("string", s).Msg("Called HasPrefix")
 	return strings.HasPrefix(s, prefix)
 }
 
@@ -33,7 +33,7 @@ func ApplyTemplateToFile(tData TData) error {
 	}
 	defer output.Close()
 
-	log.Info().Str("templatePath", templatePath).Any("data", tData).Msg("Attempting to apply template with the following data")
+	log.Trace().Str("templatePath", templatePath).Any("data", tData).Msg("Attempting to apply template with the following data")
 
 	// Apply the template to the contents and write the output to the file
 	if err := tmpl.Execute(output, tData); err != nil {
@@ -41,7 +41,7 @@ func ApplyTemplateToFile(tData TData) error {
 		return err
 	}
 
-	log.Info().Str("template", templatePath).Str("file", contentHtmlPath).Msg("Successfully applied template to file")
+	log.Trace().Str("template", templatePath).Str("file", contentHtmlPath).Msg("Successfully applied template to file")
 
 	return nil
 }

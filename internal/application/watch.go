@@ -63,7 +63,7 @@ func WatchInputDirectory(config Config) error {
 
 			// Only trigger conversion on file modifications or creations
 			if event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create {
-				log.Info().Str("file", event.Name).Msg("File change detected")
+				log.Info().Str("changedFile", event.Name).Msg("File change detected, reloading")
 
 				err = ProcessFiles(config)
 				if err != nil {
