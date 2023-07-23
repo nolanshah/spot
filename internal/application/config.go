@@ -22,9 +22,11 @@ type Config struct {
 }
 
 type ContentEntry struct {
-	InputPath  string `yaml:"input_path"`
-	OutputPath string `yaml:"output_path"`
-	Template   string `yaml:"template"`
+	InputPath   string `yaml:"input_path"`
+	OutputPath  string `yaml:"output_path"`
+	Template    string `yaml:"template"`
+	Title       string `yaml:"title"`
+	Description string `yaml:"description"`
 }
 
 type trieNode struct {

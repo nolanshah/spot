@@ -161,10 +161,18 @@ func ProcessFiles(config Config) error {
 	// transform prior repr of pages into list of TPage
 	tPages := make([]TPage, 0, len(pages))
 	for _, p := range pages {
-		foundTitleP := GetTitleForHtmlFile(p.absOutputPath)
-		foundTitle := ""
-		if foundTitleP != nil {
-			foundTitle = *foundTitleP
+		foundTitle := p.contentEntry.Title
+		if len(foundTitle) == 0 {
+			foundTitleP := GetTitleForHtmlFile(p.absOutputPath)
+			if foundTitleP != nil {
+				foundTitle = *foundTitleP
+			} else {
+				log.Warn().Str("file", p.relContentPath).Msg("No title for page")
+			}
+		}
+		foundDesc := p.contentEntry.Description
+		if len(foundDesc) == 0 {
+			log.Warn().Str("file", p.relContentPath).Msg("No description for page")
 		}
 
 		tPages = append(tPages, TPage{
@@ -173,7 +181,7 @@ func ProcessFiles(config Config) error {
 			DestinationPath: p.absOutputPath,
 			UrlPath:         "/" + p.url,
 			Title:           foundTitle,
-			Description:     "Desc placeholder for /" + p.url,
+			Description:     foundDesc,
 			Date:            time.Now(),
 			Tags:            []string{},
 			Metadata:        map[string]string{},
