@@ -32,15 +32,16 @@ func loadTemplates(baseTemplateDirPath string, templateName string) *template.Te
 
 	log.Trace().Any("paths", paths).Msg("Template paths.")
 
-	// Parse the template file
-	tmpl, err := template.New(templateName).Funcs(template.FuncMap{
+	// Parse all the templates (incl possible deps) with the function map configured
+	tmpl, err := template.New("__sentinel").Funcs(template.FuncMap{
 		"HasPrefix": hasPrefix,
 	}).ParseFiles(paths...)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to parse templates.")
 	}
 
-	return tmpl
+	// Then re-load the template we care about and make sure it's named appropriately so it can be referenced
+	return template.Must(tmpl.New(templateName).ParseFiles(filepath.Join(baseTemplateDirPath, templateName)))
 }
 
 func ApplyTemplateToFile(tData TData) error {
@@ -59,7 +60,7 @@ func ApplyTemplateToFile(tData TData) error {
 	log.Trace().Str("templatePath", path.Base(templatePath)).Any("data", tData).Msg("Attempting to apply template with the following data.")
 
 	// Apply the template to the contents and write the output to the file
-	if err := tmpl.Execute(output, tData); err != nil {
+	if err := tmpl.ExecuteTemplate(output, path.Base(templatePath), tData); err != nil {
 		log.Error().Err(err).Msg("Failed to apply template.")
 		return err
 	}
