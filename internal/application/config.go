@@ -19,6 +19,8 @@ type Config struct {
 	TemplatesPath   string         `yaml:"templates_path"`
 	BuildPath       string         `yaml:"build_path"`
 	DefaultTemplate string         `yaml:"default_template"`
+	SiteTitle       string         `yaml:"site_title"`
+	SiteDescription string         `yaml:"site_description"`
 	Content         []ContentEntry `yaml:"content"`
 
 	contentTrie pathTrie `yaml:"-"`

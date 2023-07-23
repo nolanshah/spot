@@ -205,6 +205,10 @@ func ProcessFiles(config Config) error {
 			Pages: TPageList{
 				List: tPages,
 			},
+			Site: TSite{
+				Title:       config.SiteTitle,
+				Description: config.SiteDescription,
+			},
 		} // page.absOutputPath, page.contentEntry.Template, &pages_urls
 
 		err = ApplyTemplateToFile(tData)

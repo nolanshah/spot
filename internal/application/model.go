@@ -52,8 +52,14 @@ func (tpl *TPageList) FilterByMetadata(key string, val string) (ret []TPage) {
 	return
 }
 
+type TSite struct {
+	Title       string
+	Description string
+}
+
 type TData struct {
 	Page     TPage
 	Contents template.HTML
 	Pages    TPageList
+	Site     TSite
 }
