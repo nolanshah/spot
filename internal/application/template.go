@@ -57,7 +57,7 @@ func ApplyTemplateToFile(tData TData) error {
 	}
 	defer output.Close()
 
-	log.Trace().Str("templatePath", path.Base(templatePath)).Any("data", tData).Msg("Attempting to apply template with the following data.")
+	log.Trace().Str("templatePath", path.Base(templatePath)).Any("data.Page", tData.Page).Msg("Attempting to apply template with the following data.")
 
 	// Apply the template to the contents and write the output to the file
 	if err := tmpl.ExecuteTemplate(output, path.Base(templatePath), tData); err != nil {
