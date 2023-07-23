@@ -140,7 +140,9 @@ func ParseConfig(configPath string) (Config, error) {
 	contentTrie := newTrie()
 	for i := range config.Content {
 		config.Content[i].InputPath = filepath.Join(config.ContentPath, config.Content[i].InputPath)
-		config.Content[i].OutputPath = filepath.Join(config.BuildPath, config.Content[i].OutputPath)
+		if config.Content[i].OutputPath != "" {
+			config.Content[i].OutputPath = filepath.Join(config.BuildPath, config.Content[i].OutputPath)
+		}
 		config.Content[i].Template = filepath.Join(config.TemplatesPath, config.Content[i].Template)
 		contentTrie.insert(config.Content[i].InputPath, &config.Content[i])
 	}
@@ -149,20 +151,30 @@ func ParseConfig(configPath string) (Config, error) {
 	return config, nil
 }
 
-func MatchContentEntry(config Config, inputPath string, parseFrontMatter bool) *ContentEntry {
-	entry := config.contentTrie.search(inputPath)
-	if entry == nil && config.DefaultTemplate != "" {
+func MatchContentEntry(config Config, inputPath string, parseFrontMatter bool) ContentEntry {
+	matchedEntry := config.contentTrie.search(inputPath)
+	retEntry := ContentEntry{}
+	if matchedEntry == nil && config.DefaultTemplate != "" {
 		// Create a default ContentEntry
 		outputPath := filepath.Join(config.BuildPath, getOutputPath(inputPath, config.ContentPath))
-		entry = &ContentEntry{
+		retEntry = ContentEntry{
 			InputPath:  inputPath,
 			OutputPath: outputPath,
 			Template:   config.DefaultTemplate,
 		}
-		log.Trace().Any("generatedEntry", entry).Str("outputPath", outputPath).Str("buildPath", config.BuildPath).Msg("Generated default content entry.")
-	} else if entry != nil && entry.OutputPath == "" {
-		// Fill the output path using default logic
-		entry.OutputPath = filepath.Join(config.BuildPath, getOutputPath(entry.InputPath, config.ContentPath))
+		log.Trace().Any("generatedEntry", matchedEntry).Str("outputPath", outputPath).Str("buildPath", config.BuildPath).Msg("Generated default content entry.")
+	} else if matchedEntry != nil {
+		retEntry = *matchedEntry
+		retEntry.InputPath = inputPath
+		resolvedOutputPath := filepath.Join(config.BuildPath, getOutputPath(inputPath, config.ContentPath))
+		if retEntry.OutputPath == "" {
+			// Fill the output path using default logic
+			retEntry.OutputPath = resolvedOutputPath
+		} else if retEntry.OutputPath == resolvedOutputPath {
+			// no-op
+		} else {
+			log.Fatal().Any("entry", matchedEntry).Str("inputPath", inputPath).Msg("Remapping the output path isn't supported yet. Output path must be empty for a content entry that applies to multiple children.")
+		}
 	}
 
 	if parseFrontMatter {
@@ -177,16 +189,16 @@ func MatchContentEntry(config Config, inputPath string, parseFrontMatter bool) *
 			if err != nil {
 				log.Err(err).Str("file", inputPath).Msg("Failed to read front matter from file.")
 			} else {
-				entry.Title = fme.Title
-				entry.Description = fme.Description
-				entry.CreatedAt = fme.CreatedAt
-				entry.Tags = fme.Tags
-				entry.Metadata = fme.Metadata
+				retEntry.Title = fme.Title
+				retEntry.Description = fme.Description
+				retEntry.CreatedAt = fme.CreatedAt
+				retEntry.Tags = fme.Tags
+				retEntry.Metadata = fme.Metadata
 			}
 		}
 	}
 
-	return entry
+	return retEntry
 }
 
 func getOutputPath(inputPath string, baseInputPath string) string {

@@ -84,10 +84,6 @@ func ProcessFiles(config Config) error {
 		absolutePath := filepath.Join(config.ContentPath, relContentPath)
 
 		contentEntry := MatchContentEntry(config, absolutePath, extension == ".md")
-		if contentEntry == nil {
-			log.Error().Err(err).Str("absolutePath", absolutePath).Msg("No content entry.")
-			return err
-		}
 
 		// Create the output directory structure
 		outputPath := filepath.Join(config.BuildPath, filepath.Dir(relContentPath))
@@ -115,7 +111,7 @@ func ProcessFiles(config Config) error {
 				absContentPath: contentEntry.InputPath,
 				relOutputPath:  relOutputPath,
 				absOutputPath:  contentEntry.OutputPath,
-				contentEntry:   *contentEntry,
+				contentEntry:   contentEntry,
 				fileNameNoExt:  fileName,
 			})
 		} else if extension == ".html" {
@@ -133,7 +129,7 @@ func ProcessFiles(config Config) error {
 				absContentPath: contentEntry.InputPath,
 				relOutputPath:  relOutputPath,
 				absOutputPath:  contentEntry.OutputPath,
-				contentEntry:   *contentEntry,
+				contentEntry:   contentEntry,
 				fileNameNoExt:  fileName,
 			})
 		} else if extension == ".webloc" {
