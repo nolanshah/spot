@@ -161,12 +161,18 @@ func ProcessFiles(config Config) error {
 	// transform prior repr of pages into list of TPage
 	tPages := make([]TPage, 0, len(pages))
 	for _, p := range pages {
+		foundTitleP := GetTitleForHtmlFile(p.absOutputPath)
+		foundTitle := ""
+		if foundTitleP != nil {
+			foundTitle = *foundTitleP
+		}
+
 		tPages = append(tPages, TPage{
 			SourcePath:      p.absContentPath,
 			TemplatePath:    p.contentEntry.Template,
 			DestinationPath: p.absOutputPath,
 			UrlPath:         "/" + p.url,
-			Title:           "Title placeholder for /" + p.url,
+			Title:           foundTitle,
 			Description:     "Desc placeholder for /" + p.url,
 			Date:            time.Now(),
 			Tags:            []string{},
