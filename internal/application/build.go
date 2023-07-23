@@ -1,10 +1,13 @@
 package application
 
 import (
+	"html/template"
+	"io/ioutil"
 	"main/internal/converters"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog/log"
 )
@@ -140,15 +143,40 @@ func ProcessFiles(config Config) error {
 		return nil
 	})
 
-	pages_urls := make([]string, 0, len(pages))
+	// transform prior repr of pages into list of TPage
+	tPages := make([]TPage, 0, len(pages))
 	for _, p := range pages {
-		pages_urls = append(pages_urls, p.url)
+		tPages = append(tPages, TPage{
+			SourcePath:      p.absContentPath,
+			TemplatePath:    p.contentEntry.Template,
+			DestinationPath: p.absOutputPath,
+			UrlPath:         "/" + p.url,
+			Title:           "Title placeholder for /" + p.url,
+			Description:     "Desc placeholder for /" + p.url,
+			Date:            time.Now(),
+			Tags:            []string{},
+			Metadata:        map[string]string{},
+		})
 	}
 
-	for _, page := range pages {
-		err = ApplyTemplateToFile(page.absOutputPath, page.contentEntry.Template, &pages_urls)
+	for _, tPage := range tPages {
+		// Read the contents of the file
+		contents, err := ioutil.ReadFile(tPage.DestinationPath)
 		if err != nil {
-			log.Error().Err(err).Str("template", page.contentEntry.Template).Str("file", page.absOutputPath).Msg("Failed to apply template to file")
+			log.Error().Err(err).Msg("Failed to read file")
+		}
+
+		tData := TData{
+			Page:     tPage,
+			Contents: template.HTML(contents),
+			Pages: TPageList{
+				List: tPages,
+			},
+		} // page.absOutputPath, page.contentEntry.Template, &pages_urls
+
+		err = ApplyTemplateToFile(tData)
+		if err != nil {
+			log.Error().Err(err).Any("tPage", tPage).Msg("Failed to apply template to file")
 			return err
 		}
 	}

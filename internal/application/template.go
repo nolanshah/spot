@@ -2,7 +2,6 @@ package application
 
 import (
 	"html/template"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -15,12 +14,9 @@ func hasPrefix(prefix string, s string) bool {
 	return strings.HasPrefix(s, prefix)
 }
 
-func ApplyTemplateToFile(contentHtmlPath string, templatePath string, pages *[]string) error {
-	// Read the contents of the file
-	contents, err := ioutil.ReadFile(contentHtmlPath)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to read file")
-	}
+func ApplyTemplateToFile(tData TData) error {
+	templatePath := tData.Page.TemplatePath
+	contentHtmlPath := tData.Page.DestinationPath
 
 	// Parse the template file
 	tmpl, err := template.New(path.Base(templatePath)).Funcs(template.FuncMap{
@@ -37,18 +33,10 @@ func ApplyTemplateToFile(contentHtmlPath string, templatePath string, pages *[]s
 	}
 	defer output.Close()
 
-	data := struct {
-		Contents template.HTML
-		Pages    []string
-	}{
-		Contents: template.HTML(contents),
-		Pages:    *pages,
-	}
-
-	log.Info().Str("templatePath", templatePath).Any("data", data).Msg("Attempting to apply template with the following data")
+	log.Info().Str("templatePath", templatePath).Any("data", tData).Msg("Attempting to apply template with the following data")
 
 	// Apply the template to the contents and write the output to the file
-	if err := tmpl.Execute(output, data); err != nil {
+	if err := tmpl.Execute(output, tData); err != nil {
 		log.Error().Err(err).Msg("Failed to apply template")
 		return err
 	}
