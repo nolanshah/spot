@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"github.com/fsnotify/fsnotify"
@@ -24,10 +25,23 @@ func WatchInputDirectory(config Config) error {
 	defer watcher.Close()
 
 	// Add the input directory to the watcher
-	err = watcher.Add(config.ContentPath)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to watch input directory")
-		return err
+	watcherDirs := []string{config.ContentPath, config.StaticPath}
+	for _, apexDir := range watcherDirs {
+		err := filepath.Walk(apexDir, func(watcherDir string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			err = watcher.Add(watcherDir)
+			if err != nil {
+				log.Error().Str("dir", watcherDir).Err(err).Msg("Failed to add dir to watcher")
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			log.Error().Str("apexDir", apexDir).Err(err).Msg("Failed to walk dirs underneath apexDir")
+			return err
+		}
 	}
 
 	// Initial conversion of files
