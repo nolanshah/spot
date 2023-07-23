@@ -19,7 +19,7 @@ type Webloc struct {
 func ExtractLinkFromWebloc(inputDir string, inputFileRelPath string) (string, error) {
 	inputDirAbs, err := filepath.Abs(inputDir)
 	if err != nil {
-		log.Error().Err(err).Str("inputDirAbs", inputDir).Msg("Failed to get input absolute path")
+		log.Error().Err(err).Str("inputDirAbs", inputDir).Msg("Failed to get input absolute path.")
 		return "", err
 	}
 	inputFileAbsPath := filepath.Join(inputDirAbs, inputFileRelPath)

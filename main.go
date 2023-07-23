@@ -30,7 +30,7 @@ func main() {
 		Before: func(cCtx *cli.Context) error {
 			if cCtx.Bool("debug") {
 				zerolog.SetGlobalLevel(zerolog.TraceLevel)
-				log.Debug().Msg("Debug logging enabled.")
+				log.Debug().Msg("Debug logging enabled")
 			}
 			return nil
 		},
@@ -83,7 +83,7 @@ func main() {
 			configFile := cCtx.Path("config")
 			config, err := application.ParseConfig(configFile)
 			if err != nil {
-				log.Fatal().Err(err).Msg("Failed to get config")
+				log.Fatal().Err(err).Msg("Failed to get config.")
 				return err
 			}
 
@@ -97,9 +97,9 @@ func main() {
 					err := application.WatchInputDirectory(config)
 					if err != nil {
 						if errors.Is(err, os.ErrPermission) {
-							log.Fatal().Err(err).Msg("Insufficient permissions")
+							log.Fatal().Err(err).Msg("Insufficient permissions.")
 						} else {
-							log.Fatal().Err(err).Msg("Error while watching input directory")
+							log.Fatal().Err(err).Msg("Error while watching input directory.")
 						}
 					}
 				}()
@@ -109,9 +109,9 @@ func main() {
 				err := application.ServeOutputDirectory(config.BuildPath, addr, &wg)
 				if err != nil {
 					if errors.Is(err, os.ErrPermission) {
-						log.Fatal().Err(err).Msg("Insufficient permissions")
+						log.Fatal().Err(err).Msg("Insufficient permissions.")
 					} else {
-						log.Fatal().Err(err).Msg("Failed to serve output directory")
+						log.Fatal().Err(err).Msg("Failed to serve output directory.")
 					}
 				}
 
@@ -120,9 +120,9 @@ func main() {
 				err := application.ProcessFiles(config)
 				if err != nil {
 					if errors.Is(err, os.ErrPermission) {
-						log.Fatal().Err(err).Msg("Insufficient permissions")
+						log.Fatal().Err(err).Msg("Insufficient permissions.")
 					} else {
-						log.Fatal().Err(err).Msg("Conversion failed")
+						log.Fatal().Err(err).Msg("Conversion failed.")
 					}
 				}
 			}

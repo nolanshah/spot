@@ -19,7 +19,7 @@ func WatchInputDirectory(config Config) error {
 	// Create a new file system watcher
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to create file watcher")
+		log.Error().Err(err).Msg("Failed to create file watcher.")
 		return err
 	}
 	defer watcher.Close()
@@ -33,13 +33,13 @@ func WatchInputDirectory(config Config) error {
 			}
 			err = watcher.Add(watcherDir)
 			if err != nil {
-				log.Error().Str("dir", watcherDir).Err(err).Msg("Failed to add dir to watcher")
+				log.Error().Str("dir", watcherDir).Err(err).Msg("Failed to add dir to watcher.")
 				return err
 			}
 			return nil
 		})
 		if err != nil {
-			log.Error().Str("apexDir", apexDir).Err(err).Msg("Failed to walk dirs underneath apexDir")
+			log.Error().Str("apexDir", apexDir).Err(err).Msg("Failed to walk dirs underneath apexDir.")
 			return err
 		}
 	}
@@ -47,11 +47,11 @@ func WatchInputDirectory(config Config) error {
 	// Initial conversion of files
 	err = ProcessFiles(config)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to convert initial files to HTML")
+		log.Error().Err(err).Msg("Failed to convert initial files to HTML.")
 		return err
 	}
 
-	log.Info().Msg("Watching input directory for changes...")
+	log.Info().Msg("Watching input directory for changes.")
 
 	// Start watching for file events
 	for {
@@ -63,11 +63,11 @@ func WatchInputDirectory(config Config) error {
 
 			// Only trigger conversion on file modifications or creations
 			if event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create {
-				log.Info().Str("changedFile", event.Name).Msg("File change detected, reloading")
+				log.Info().Str("changedFile", event.Name).Msg("File change detected, reloading.")
 
 				err = ProcessFiles(config)
 				if err != nil {
-					log.Error().Err(err).Msg("Failed to convert files to HTML")
+					log.Error().Err(err).Msg("Failed to convert files to HTML.")
 					return err
 				}
 			}
@@ -77,9 +77,9 @@ func WatchInputDirectory(config Config) error {
 				return errors.New("file watcher closed unexpectedly")
 			}
 
-			log.Error().Err(err).Msg("File watcher error")
+			log.Error().Err(err).Msg("File watcher error.")
 		case <-stop:
-			log.Info().Msg("Stopping file watcher")
+			log.Info().Msg("Stopping file watcher.")
 			return nil
 		}
 	}

@@ -18,24 +18,24 @@ func ResetDirectory(dirPath string) error {
 		// Directory doesn't exist, create it
 		err := os.Mkdir(dirPath, os.ModePerm)
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to create directory")
+			log.Error().Err(err).Msg("Failed to create directory.")
 			return err
 		}
 	} else if err != nil {
-		log.Error().Err(err).Msg("Failed to check directory existence")
+		log.Error().Err(err).Msg("Failed to check directory existence.")
 		return err
 	} else {
 		// Directory exists, delete its contents
 		err := os.RemoveAll(dirPath)
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to delete directory")
+			log.Error().Err(err).Msg("Failed to delete directory.")
 			return err
 		}
 
 		// Recreate the directory
 		err = os.Mkdir(dirPath, os.ModePerm)
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to create directory")
+			log.Error().Err(err).Msg("Failed to create directory.")
 			return err
 		}
 	}
@@ -62,7 +62,7 @@ func ProcessFiles(config Config) error {
 
 	err := filepath.Walk(config.ContentPath, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
-			log.Error().Err(err).Str("file", filePath).Msg("Error accessing file")
+			log.Error().Err(err).Str("file", filePath).Msg("Error accessing file.")
 			return err
 		}
 
@@ -77,7 +77,7 @@ func ProcessFiles(config Config) error {
 		// Get the relative path of the input file
 		relContentPath, err := filepath.Rel(config.ContentPath, filePath)
 		if err != nil {
-			log.Error().Err(err).Str("file", filePath).Msg("Failed to get relative path")
+			log.Error().Err(err).Str("file", filePath).Msg("Failed to get relative path.")
 			return err
 		}
 
@@ -85,27 +85,27 @@ func ProcessFiles(config Config) error {
 
 		contentEntry := MatchContentEntry(config, absolutePath)
 		if contentEntry == nil {
-			log.Error().Err(err).Str("absolutePath", absolutePath).Msg("No content entry")
+			log.Error().Err(err).Str("absolutePath", absolutePath).Msg("No content entry.")
 			return err
 		}
 
 		// Create the output directory structure
 		outputPath := filepath.Join(config.BuildPath, filepath.Dir(relContentPath))
 		if err := os.MkdirAll(outputPath, 0755); err != nil {
-			log.Error().Err(err).Str("file", filePath).Msg("Failed to create output directory structure")
+			log.Error().Err(err).Str("file", filePath).Msg("Failed to create output directory structure.")
 			return err
 		}
 
 		if extension == ".docx" || extension == ".md" || extension == ".txt" || extension == ".ipynb" {
 			outputFilePath, err := converters.ConvertFileToHTML(config.ContentPath, relContentPath, config.BuildPath, fileName)
 			if err != nil {
-				log.Error().Err(err).Str("input", absolutePath).Str("output", outputFilePath).Msg("Failed to convert file to HTML")
+				log.Error().Err(err).Str("input", absolutePath).Str("output", outputFilePath).Msg("Failed to convert file to HTML.")
 				return err
 			}
 
 			relOutputPath, err := filepath.Rel(config.BuildPath, outputFilePath)
 			if err != nil {
-				log.Error().Err(err).Str("file", filePath).Msg("Failed to get relative path")
+				log.Error().Err(err).Str("file", filePath).Msg("Failed to get relative path.")
 				return err
 			}
 
@@ -123,7 +123,7 @@ func ProcessFiles(config Config) error {
 
 			relOutputPath, err := filepath.Rel(config.BuildPath, outputPath)
 			if err != nil {
-				log.Error().Err(err).Str("file", filePath).Msg("Failed to get relative path")
+				log.Error().Err(err).Str("file", filePath).Msg("Failed to get relative path.")
 				return err
 			}
 
@@ -139,19 +139,19 @@ func ProcessFiles(config Config) error {
 		} else if extension == ".webloc" {
 			link, err := converters.ExtractLinkFromWebloc(config.ContentPath, relContentPath)
 			if err != nil {
-				log.Error().Err(err).Str("input", absolutePath).Msg("Failed to extract link from webloc")
+				log.Error().Err(err).Str("input", absolutePath).Msg("Failed to extract link from webloc.")
 				return err
 			}
 			log.Info().Str("file", relContentPath).Str("link", link).Msg("Found a webloc link, not doing anything it with.")
 		} else if extension == ".lnk" {
 			link, err := converters.ExtractLinkFromShortcut(config.ContentPath, relContentPath)
 			if err != nil {
-				log.Error().Err(err).Str("input", absolutePath).Msg("Failed to extract link from lnk")
+				log.Error().Err(err).Str("input", absolutePath).Msg("Failed to extract link from lnk.")
 				return nil // TODO: don't ignore the error
 			}
 			log.Info().Str("file", relContentPath).Str("link", link).Msg("Found a webloc link, not doing anything it with.")
 		} else {
-			log.Info().Str("extension", extension).Str("file", relContentPath).Msg("Skipping file since extension is not supported")
+			log.Info().Str("extension", extension).Str("file", relContentPath).Msg("Skipping file since extension is not supported.")
 		}
 
 		return nil
@@ -166,20 +166,20 @@ func ProcessFiles(config Config) error {
 			if foundTitleP != nil {
 				foundTitle = *foundTitleP
 			} else {
-				log.Warn().Str("file", p.absOutputPath).Msg("No title for page")
+				log.Warn().Str("file", p.absOutputPath).Msg("No title for page.")
 			}
 		}
 
 		foundDesc := p.contentEntry.Description
 		if len(foundDesc) == 0 {
-			log.Warn().Str("file", p.absContentPath).Msg("No description for page")
+			log.Warn().Str("file", p.absContentPath).Msg("No description for page.")
 		}
 
 		foundCreationTime := p.contentEntry.CreatedAt
 		if foundCreationTime.IsZero() {
 			foundCreationTime = GetCreationTimeForFile(p.absContentPath)
 			if foundCreationTime.IsZero() {
-				log.Warn().Str("file", p.absContentPath).Msg("No creation time for page")
+				log.Warn().Str("file", p.absContentPath).Msg("No creation time for page.")
 			}
 		}
 
@@ -200,7 +200,7 @@ func ProcessFiles(config Config) error {
 		// Read the contents of the file
 		contents, err := ioutil.ReadFile(tPage.DestinationPath)
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to read file")
+			log.Error().Err(err).Msg("Failed to read file.")
 		}
 
 		tData := TData{
@@ -213,13 +213,13 @@ func ProcessFiles(config Config) error {
 
 		err = ApplyTemplateToFile(tData)
 		if err != nil {
-			log.Error().Err(err).Any("tPage", tPage).Msg("Failed to apply template to file")
+			log.Error().Err(err).Any("tPage", tPage).Msg("Failed to apply template to file.")
 			return err
 		}
 	}
 
 	if err != nil {
-		log.Error().Err(err).Msg("Error walking through input directory")
+		log.Error().Err(err).Msg("Error walking through input directory.")
 		return err
 	}
 

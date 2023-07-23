@@ -17,7 +17,7 @@ func ServeOutputDirectory(outputDir string, addr string, wg *sync.WaitGroup) err
 
 	server := &http.Server{Addr: addr}
 
-	log.Info().Str("addr", addr).Msg("Serving files...")
+	log.Info().Str("addr", addr).Msg("Serving files.")
 
 	// Create a channel to listen for signals
 	sigChan := make(chan os.Signal, 1)
@@ -26,12 +26,12 @@ func ServeOutputDirectory(outputDir string, addr string, wg *sync.WaitGroup) err
 	// Create a goroutine to handle server shutdown
 	go func() {
 		<-sigChan // Wait for the signal
-		log.Info().Msg("Shutting down HTTP server...")
+		log.Info().Msg("Shutting down HTTP server.")
 
 		// Shutdown the server gracefully with a timeout of 5 seconds
 		err := server.Shutdown(nil)
 		if err != nil {
-			log.Error().Err(err).Msg("Error during server shutdown")
+			log.Error().Err(err).Msg("Error during server shutdown.")
 		}
 
 		wg.Done() // Notify wait group that shutdown is complete
@@ -45,7 +45,7 @@ func ServeOutputDirectory(outputDir string, addr string, wg *sync.WaitGroup) err
 			return nil
 		}
 
-		log.Error().Err(err).Msg("Failed to start HTTP server")
+		log.Error().Err(err).Msg("Failed to start HTTP server.")
 		return err
 	}
 
