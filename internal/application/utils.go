@@ -25,14 +25,14 @@ func findFirstH1(node *html.Node) *html.Node {
 func GetTitleForHtmlFile(filePath string) (val *string) {
 	file, err := os.Open(filePath)
 	if err != nil {
-		log.Err(err).Str("filePath", filePath).Msg("Error opening html file to get title.")
+		log.Trace().Err(err).Str("filePath", filePath).Msg("Error opening html file to get title.")
 		return
 	}
 	defer file.Close()
 
 	doc, err := html.Parse(file)
 	if err != nil {
-		log.Err(err).Str("filePath", filePath).Msg("Error parsing HTML to get title.")
+		log.Trace().Err(err).Str("filePath", filePath).Msg("Error parsing HTML to get title.")
 		return
 	}
 
@@ -46,8 +46,8 @@ func GetTitleForHtmlFile(filePath string) (val *string) {
 
 func GetCreationTimeForFile(filePath string) (creationTime time.Time) {
 	fileInfo, err := os.Stat(filePath)
-
 	if err != nil {
+		log.Trace().Err(err).Str("filePath", filePath).Msg("Failed to stat file.")
 		return
 	}
 	return fileInfo.ModTime()
