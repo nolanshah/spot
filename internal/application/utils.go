@@ -3,6 +3,7 @@ package application
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"golang.org/x/net/html"
 )
@@ -41,4 +42,13 @@ func GetTitleForHtmlFile(filePath string) (val *string) {
 	} else {
 		return nil
 	}
+}
+
+func GetCreationTimeForFile(filePath string) (creationTime time.Time) {
+	fileInfo, err := os.Stat(filePath)
+
+	if err != nil {
+		return
+	}
+	return fileInfo.ModTime()
 }

@@ -166,12 +166,21 @@ func ProcessFiles(config Config) error {
 			if foundTitleP != nil {
 				foundTitle = *foundTitleP
 			} else {
-				log.Warn().Str("file", p.relContentPath).Msg("No title for page")
+				log.Warn().Str("file", p.absOutputPath).Msg("No title for page")
 			}
 		}
+
 		foundDesc := p.contentEntry.Description
 		if len(foundDesc) == 0 {
-			log.Warn().Str("file", p.relContentPath).Msg("No description for page")
+			log.Warn().Str("file", p.absContentPath).Msg("No description for page")
+		}
+
+		foundCreationTime := p.contentEntry.CreatedAt
+		if foundCreationTime.IsZero() {
+			foundCreationTime = GetCreationTimeForFile(p.absContentPath)
+			if foundCreationTime.IsZero() {
+				log.Warn().Str("file", p.absContentPath).Msg("No creation time for page")
+			}
 		}
 
 		tPages = append(tPages, TPage{
@@ -181,7 +190,7 @@ func ProcessFiles(config Config) error {
 			UrlPath:         "/" + p.url,
 			Title:           foundTitle,
 			Description:     foundDesc,
-			CreatedAt:       p.contentEntry.CreatedAt,
+			CreatedAt:       foundCreationTime,
 			Tags:            p.contentEntry.Tags,
 			Metadata:        p.contentEntry.Metadata,
 		})
