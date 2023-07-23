@@ -40,6 +40,11 @@ func ServeOutputDirectory(outputDir string, addr string, wg *sync.WaitGroup) err
 	// Start the HTTP server
 	err := server.ListenAndServe()
 	if err != nil {
+		if err.Error() == "http: Server closed" {
+			log.Info().Msg("Server halting.")
+			return nil
+		}
+
 		log.Error().Err(err).Msg("Failed to start HTTP server")
 		return err
 	}
