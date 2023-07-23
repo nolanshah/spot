@@ -25,7 +25,7 @@ func WatchInputDirectory(config Config) error {
 	defer watcher.Close()
 
 	// Add the input directory to the watcher
-	watcherDirs := []string{config.ContentPath, config.StaticPath}
+	watcherDirs := []string{config.ContentPath, config.StaticPath, config.TemplatesPath}
 	for _, apexDir := range watcherDirs {
 		err := filepath.Walk(apexDir, func(watcherDir string, info os.FileInfo, err error) error {
 			if err != nil {
