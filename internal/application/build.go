@@ -83,7 +83,7 @@ func ProcessFiles(config Config) error {
 
 		absolutePath := filepath.Join(config.ContentPath, relContentPath)
 
-		contentEntry := MatchContentEntry(config, absolutePath)
+		contentEntry := MatchContentEntry(config, absolutePath, extension == ".md")
 		if contentEntry == nil {
 			log.Error().Err(err).Str("absolutePath", absolutePath).Msg("No content entry.")
 			return err

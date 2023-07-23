@@ -2,10 +2,12 @@ package application
 
 import (
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/adrg/frontmatter"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v2"
 )
@@ -26,6 +28,14 @@ type ContentEntry struct {
 	InputPath   string            `yaml:"input_path"`
 	OutputPath  string            `yaml:"output_path"`
 	Template    string            `yaml:"template"`
+	Title       string            `yaml:"title"`
+	Description string            `yaml:"description"`
+	CreatedAt   time.Time         `yaml:"created_at"`
+	Tags        []string          `yaml:"tags"`
+	Metadata    map[string]string `yaml:"metadata"`
+}
+
+type FrontMatterEntry struct {
 	Title       string            `yaml:"title"`
 	Description string            `yaml:"description"`
 	CreatedAt   time.Time         `yaml:"created_at"`
@@ -139,7 +149,7 @@ func ParseConfig(configPath string) (Config, error) {
 	return config, nil
 }
 
-func MatchContentEntry(config Config, inputPath string) *ContentEntry {
+func MatchContentEntry(config Config, inputPath string, parseFrontMatter bool) *ContentEntry {
 	entry := config.contentTrie.search(inputPath)
 	if entry == nil && config.DefaultTemplate != "" {
 		// Create a default ContentEntry
@@ -154,6 +164,28 @@ func MatchContentEntry(config Config, inputPath string) *ContentEntry {
 		// Fill the output path using default logic
 		entry.OutputPath = filepath.Join(config.BuildPath, getOutputPath(entry.InputPath, config.ContentPath))
 	}
+
+	if parseFrontMatter {
+		var fme FrontMatterEntry
+
+		file, err := os.Open(inputPath)
+		if err != nil {
+			log.Err(err).Str("file", inputPath).Msg("Failed to read file to extract front matter.")
+		} else {
+			defer file.Close()
+			_, err := frontmatter.Parse(file, &fme)
+			if err != nil {
+				log.Err(err).Str("file", inputPath).Msg("Failed to read front matter from file.")
+			} else {
+				entry.Title = fme.Title
+				entry.Description = fme.Description
+				entry.CreatedAt = fme.CreatedAt
+				entry.Tags = fme.Tags
+				entry.Metadata = fme.Metadata
+			}
+		}
+	}
+
 	return entry
 }
 
