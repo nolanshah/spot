@@ -47,8 +47,7 @@ func WatchInputDirectory(config Config) error {
 	// Initial conversion of files
 	err = ProcessFiles(config)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to convert initial files to HTML.")
-		return err
+		log.Error().Err(err).Msg("Failed to process.")
 	}
 
 	log.Info().Msg("Watching input directory for changes.")
@@ -67,8 +66,7 @@ func WatchInputDirectory(config Config) error {
 
 				err = ProcessFiles(config)
 				if err != nil {
-					log.Error().Err(err).Msg("Failed to convert files to HTML.")
-					return err
+					log.Error().Err(err).Msg("Failed to refresh.")
 				}
 			}
 
