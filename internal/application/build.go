@@ -96,7 +96,7 @@ func ProcessFiles(config Config) error {
 			return err
 		}
 
-		if extension == ".docx" || extension == ".md" || extension == ".txt" || extension == ".ipynb" {
+		if extension == ".docx" || extension == ".rtf" || extension == ".odt" || extension == ".md" || extension == ".txt" || extension == ".rst" || extension == ".ipynb" {
 			outputFilePath, err := converters.ConvertFileToHTML(config.ContentPath, relContentPath, config.BuildPath, fileName)
 			if err != nil {
 				log.Error().Err(err).Str("input", absolutePath).Str("output", outputFilePath).Msg("Failed to convert file to HTML.")
