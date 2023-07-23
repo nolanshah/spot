@@ -42,8 +42,15 @@ func ConvertFileToHTML(inputDir string, inputFileRelPath string, outputDir strin
 	inputFileAbsPath := filepath.Join(inputDirAbs, inputFileRelPath)
 	outputFileRelPath := filepath.Join(filepath.Dir(inputFileRelPath), outputFileName)
 
+	args := []string{}
+	if filepath.Ext(inputFileRelPath) == ".md" {
+		log.Trace().Msg("Detected markdown, using raw_html extension.")
+		args = append(args, "-f", "gfm")
+	}
+	args = append(args, inputFileAbsPath, "-o", outputFileName, "-t", "html", "--extract-media=_assets")
+
 	// Run the pandoc command to convert the file to HTML
-	cmd := exec.Command("pandoc", inputFileAbsPath, "-o", outputFileName, "--extract-media=_assets")
+	cmd := exec.Command("pandoc", args...)
 	cmd.Dir = filepath.Join(outputDir, filepath.Dir(inputFileRelPath))
 	out, err := cmd.CombinedOutput()
 	if err != nil {
