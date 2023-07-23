@@ -1,10 +1,10 @@
 package application
 
 import (
-	"fmt"
 	"os"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"golang.org/x/net/html"
 )
 
@@ -25,14 +25,14 @@ func findFirstH1(node *html.Node) *html.Node {
 func GetTitleForHtmlFile(filePath string) (val *string) {
 	file, err := os.Open(filePath)
 	if err != nil {
-		fmt.Println("Error opening the file:", err)
+		log.Err(err).Str("filePath", filePath).Msg("Error opening html file to get title")
 		return
 	}
 	defer file.Close()
 
 	doc, err := html.Parse(file)
 	if err != nil {
-		fmt.Println("Error parsing the HTML:", err)
+		log.Err(err).Str("filePath", filePath).Msg("Error parsing HTML to get title")
 		return
 	}
 
