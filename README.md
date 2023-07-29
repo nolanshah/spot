@@ -1,6 +1,6 @@
 # spot
 
-spot is like [blot](https://github.com/davidmerfield/blot) but on rails. Spot turns a folder into a static website. It can convert docx, md, pynb, txt, latex, rtf, and really any other format supported by pandoc into html. It's suitable for a blog, docsite, or whatever you want, but it only generates html -- how and where you host it is up to you.
+spot is like [blot](https://github.com/davidmerfield/blot) but on rails. Spot turns a folder into a static website. It can convert docx, md, pynb, txt, latex, rtf, and really any other format supported by pandoc into html. It's suitable for a blog, docsite, or whatever you want. It only generates the html for your site, you still have to host it.
 
 spot is a perpetual prototype. I won't write unit tests or give support. Pull requests to add your own features are encouraged, I'm happy to merge in contributions!
 
