@@ -23,15 +23,25 @@ func CreateProjectLayout(dir string) error {
 	// Create the config file
 	configFile := fmt.Sprintf("%s/config.yaml", dir)
 	config := Config{
-		ContentPath:   "content/",
-		StaticPath:    "static/",
-		TemplatesPath: "templates/",
-		BuildPath:     "dist/",
+		ContentPath:     "content/",
+		StaticPath:      "static/",
+		TemplatesPath:   "templates/",
+		BuildPath:       "dist/",
+		DefaultTemplate: "",
+		SiteTitle:       "My Spot Site",
+		SiteDescription: "This website is created with spot!",
 		Content: []ContentEntry{
 			{
 				InputPath:  "index.md",
 				OutputPath: "index.html",
 				Template:   "main.html",
+				Title:      "Home",
+			},
+			{
+				InputPath:  "/blog/",
+				OutputPath: "",
+				Template:   "main.html",
+				Title:      "Blog",
 			},
 		},
 	}
@@ -70,6 +80,21 @@ func CreateProjectLayout(dir string) error {
 		return err
 	}
 
+	// Create the content/blog/ directory
+	blogDir := fmt.Sprintf("%s/content/blog", dir)
+	if err := os.MkdirAll(blogDir, 0755); err != nil {
+		return err
+	}
+
+	// Create the content/blog/first.md file
+	blogFirstFile := fmt.Sprintf("%s/content/blog/first.md", dir)
+	if _, err := os.Create(blogFirstFile); err != nil {
+		return err
+	}
+	if err := os.WriteFile(blogFirstFile, []byte(contentContentBlogFirstMd), 0666); err != nil {
+		return err
+	}
+
 	// Create the templates directory
 	templatesDir := fmt.Sprintf("%s/templates", dir)
 	if err := os.MkdirAll(templatesDir, 0755); err != nil {
@@ -91,19 +116,39 @@ func CreateProjectLayout(dir string) error {
 const contentTemplateMainHtml = `
 <html>
 	<head>
-		<title>Your First Spot Template!</title>
+		<title>{{ .Page.Title }} - {{ .Site.Title }}</title>
 	</head>
 	<body>
-		<h1>Your First Spot Template!</h1>
+		<h1>{{ .Site.Title }}</h1>
+		<h2>{{ .Page.Title }}</h2>
 		<main>
-			{{ .Contents }}
+			<section>
+				<ul>
+					{{- range $i, $e := .Pages.List -}}
+					{{- if HasPrefix "/blog" .UrlPath -}}
+					<li>
+						<a class="blog-list-link" href="{{ .UrlPath }}">{{ .CreatedAt.Format "02 Jan 2006" }} - {{ .Title }}</a>
+					</li>
+					{{- end -}}
+					{{- end -}}
+				</ul>
+			</section>
+			<section>
+				{{block "content" .}}
+		
+				{{ .Contents }}
+		
+				{{end}}
+			</section>
 		</main>
 	</body>
 </html>
 `
 
 const contentContentIndexMd = `
-# Hello world!
+Welcome to spot! This is the index page for your website.
+`
 
-Welcome to spot!
+const contentContentBlogFirstMd = `
+This is the first blog post.
 `
